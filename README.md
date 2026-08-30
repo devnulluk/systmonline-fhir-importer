@@ -23,6 +23,8 @@ Raw captured pages are retained byte-for-byte in the importer database before pa
 
 See [Capture and reconciliation](docs/CAPTURE-AND-RECONCILIATION.md) for the private-evidence boundary, safe stopping conditions, duplicate handling and clinical-completeness states.
 
+The [authorised live-capture runbook](docs/LIVE-CAPTURE-RUNBOOK.md) defines the read-only browser boundary and the next test-result-detail capture procedure.
+
 The capture engine now follows paginated records with a configurable pause and page limit. Every HTTP response is saved and checksummed before it is inspected, including an unexpected login page. It stops safely on session expiry, HTTP errors, pagination loops or the page limit, and writes a resumable partial manifest when interrupted. Live authenticated capture is intentionally not yet enabled: that will be tested interactively without storing credentials in this repository.
 
 Saved pages can be ingested into the evidence database and exported together:
