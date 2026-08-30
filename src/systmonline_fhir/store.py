@@ -58,6 +58,15 @@ CREATE TABLE IF NOT EXISTS analysis_finding (
     experimental INTEGER NOT NULL DEFAULT 1 CHECK(experimental IN (0, 1)),
     review_status TEXT NOT NULL DEFAULT 'unreviewed'
 );
+CREATE TABLE IF NOT EXISTS coding_review (
+    id INTEGER PRIMARY KEY,
+    assertion_id INTEGER NOT NULL REFERENCES coding_assertion(id),
+    created_at TEXT NOT NULL,
+    decision TEXT NOT NULL CHECK(decision IN ('verified', 'rejected')),
+    reviewer TEXT NOT NULL,
+    notes TEXT NOT NULL,
+    UNIQUE(assertion_id, created_at)
+);
 """
 
 
@@ -155,6 +164,27 @@ class RecordStore:
             }
             for step in mapping_steps
         ]
+        existing = self.connection.execute(
+            """SELECT id FROM coding_assertion
+            WHERE event_id = ? AND system = ? AND code = ? AND version IS ? AND status = ?""",
+            (event_id, coding.system, coding.code, coding.version, status),
+        ).fetchone()
+        if existing:
+            self.connection.execute(
+                """UPDATE coding_assertion
+                SET display = ?, confidence = ?, method = ?, mapping_provenance = ?,
+                    review_required = ? WHERE id = ?""",
+                (
+                    coding.display,
+                    confidence,
+                    method,
+                    json.dumps(provenance),
+                    int(review_required),
+                    int(existing[0]),
+                ),
+            )
+            self.connection.commit()
+            return int(existing[0])
         cursor = self.connection.execute(
             """INSERT INTO coding_assertion
             (event_id, system, code, display, version, status, confidence, method,
@@ -184,6 +214,50 @@ class RecordStore:
         ).fetchall()
         return [dict(row) for row in rows]
 
+    def pending_coding_review(self) -> list[dict]:
+        rows = self.connection.execute(
+            """SELECT coding_assertion.*, parsed_event.source_text
+            FROM coding_assertion
+            JOIN parsed_event ON parsed_event.id = coding_assertion.event_id
+            WHERE (coding_assertion.review_required = 1 OR coding_assertion.confidence < 1)
+              AND NOT EXISTS (
+                  SELECT 1 FROM coding_review WHERE coding_review.assertion_id = coding_assertion.id
+              )
+            ORDER BY coding_assertion.confidence ASC, coding_assertion.id"""
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def review_coding(
+        self,
+        assertion_id: int,
+        *,
+        decision: str,
+        reviewer: str,
+        notes: str,
+    ) -> int:
+        if decision not in {"verified", "rejected"}:
+            raise ValueError("coding review decision must be verified or rejected")
+        if not reviewer.strip():
+            raise ValueError("coding review requires a reviewer")
+        exists = self.connection.execute(
+            "SELECT 1 FROM coding_assertion WHERE id = ?", (assertion_id,)
+        ).fetchone()
+        if not exists:
+            raise ValueError("coding assertion does not exist")
+        cursor = self.connection.execute(
+            """INSERT INTO coding_review
+            (assertion_id, created_at, decision, reviewer, notes) VALUES (?, ?, ?, ?, ?)""",
+            (
+                assertion_id,
+                datetime.now(UTC).isoformat(),
+                decision,
+                reviewer,
+                notes,
+            ),
+        )
+        self.connection.commit()
+        return int(cursor.lastrowid)
+
     def event_review_queue(self) -> list[dict]:
         rows = self.connection.execute(
             """WITH ranked AS (
@@ -203,7 +277,13 @@ class RecordStore:
     def counts(self) -> dict[str, int]:
         return {
             table: int(self.connection.execute(f"SELECT count(*) FROM {table}").fetchone()[0])
-            for table in ("raw_capture", "parsed_event", "coding_assertion", "analysis_finding")
+            for table in (
+                "raw_capture",
+                "parsed_event",
+                "coding_assertion",
+                "coding_review",
+                "analysis_finding",
+            )
         }
 
     def events(self) -> list[RecordEvent]:
@@ -232,3 +312,55 @@ class RecordStore:
             )
             for row in rows
         ]
+
+    def current_events_with_ids(self) -> list[tuple[int, RecordEvent]]:
+        rows = self.connection.execute(
+            """WITH ranked AS (
+                SELECT *, row_number() OVER (
+                    PARTITION BY capture_sha256, source_file, event_date, author,
+                                 organisation, entry_type, source_text
+                    ORDER BY id DESC
+                ) AS revision_rank
+                FROM parsed_event
+            )
+            SELECT id, event_date, author, organisation, entry_type, source_text,
+                   source_file, capture_sha256
+            FROM ranked WHERE revision_rank = 1 ORDER BY event_date, id"""
+        ).fetchall()
+        return [
+            (
+                int(row["id"]),
+                RecordEvent(
+                    row["event_date"],
+                    row["author"],
+                    row["organisation"],
+                    row["entry_type"],
+                    row["source_text"],
+                    row["source_file"],
+                    row["capture_sha256"],
+                ),
+            )
+            for row in rows
+        ]
+
+    def candidate_summary(self) -> dict[str, int]:
+        coded_event_ids = [
+            event_id
+            for event_id, event in self.current_events_with_ids()
+            if event.entry_type.casefold() == "coded entry"
+        ]
+        if not coded_event_ids:
+            return {"coded_entries": 0, "with_candidates": 0, "without_candidates": 0, "ambiguous": 0}
+        placeholders = ",".join("?" for _ in coded_event_ids)
+        rows = self.connection.execute(
+            f"""SELECT event_id, count(*) AS candidate_count FROM coding_assertion
+            WHERE status = 'proposed' AND event_id IN ({placeholders}) GROUP BY event_id""",
+            coded_event_ids,
+        ).fetchall()
+        counts = {int(row["event_id"]): int(row["candidate_count"]) for row in rows}
+        return {
+            "coded_entries": len(coded_event_ids),
+            "with_candidates": sum(count > 0 for count in counts.values()),
+            "without_candidates": len(coded_event_ids) - len(counts),
+            "ambiguous": sum(count > 1 for count in counts.values()),
+        }

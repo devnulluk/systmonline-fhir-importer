@@ -7,6 +7,8 @@
 - Add privacy-preserving explicit-code coverage reporting.
 - Add checksum- and licence-gated mapping asset loading.
 - Preserve all versioned mapping paths and prohibit Read-to-ICD shortcuts.
+- Add a FHIR terminology-search adapter with confidence-capped proposed candidates.
+- Add append-only verified/rejected coding review decisions.
 
 ## 0.3.0
 

@@ -26,12 +26,22 @@ def test_retains_raw_source_and_highlights_uncertain_mapping(tmp_path):
             "raw_capture": 1,
             "parsed_event": 1,
             "coding_assertion": 1,
+            "coding_review": 0,
             "analysis_finding": 0,
         }
         queue = store.review_queue()
         assert len(queue) == 1
         assert queue[0]["confidence"] == 0.82
         assert queue[0]["review_required"] == 1
+        assert len(store.pending_coding_review()) == 1
+        store.review_coding(
+            queue[0]["id"],
+            decision="rejected",
+            reviewer="Synthetic reviewer",
+            notes="Synthetic test decision",
+        )
+        assert store.pending_coding_review() == []
+        assert store.counts()["coding_review"] == 1
         assert store.event_review_queue() == []
         assert store.events() == [event]
     finally:

@@ -21,6 +21,8 @@ Historical Read codes are retained and mapped through SNOMED CT before ICD class
 
 Licensed mapping files are checksum-pinned and kept private; see [Mapping assets](docs/MAPPING-ASSETS.md). Version 0.4.0 also reports explicit-code coverage without printing clinical text and refuses to invent a code from an unlabelled description.
 
+The [experimental candidate workflow](docs/EXPERIMENTAL-CANDIDATES.md) can retrieve ranked SNOMED CT suggestions through a configured FHIR terminology endpoint, but all suggestions remain low-confidence proposals with append-only human review.
+
 Raw captured pages are retained byte-for-byte in the importer database before parsing. Derived events and coding assertions carry confidence, method and review state; anything below 100% confidence is highlighted automatically. See [Data trust model](docs/DATA-TRUST-MODEL.md).
 
 See [Capture and reconciliation](docs/CAPTURE-AND-RECONCILIATION.md) for the private-evidence boundary, safe stopping conditions, duplicate handling and clinical-completeness states.
