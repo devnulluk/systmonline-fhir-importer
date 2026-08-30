@@ -8,6 +8,7 @@
 - Add idempotent, revision-aware derived-event storage and review queues.
 - Deduplicate identical derived FHIR resources while retaining and reporting duplicate source evidence.
 - Add automated FHIR R4 and UK Core STU2 validation in continuous integration.
+- Add a capture-manifest integrity verifier for backup and tamper checks.
 
 ## 0.2.0
 

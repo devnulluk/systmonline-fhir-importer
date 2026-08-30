@@ -36,6 +36,12 @@ systmonline-fhir saved-page-*.html \
 
 For a mixed capture set, add `--auto-detect` and `--reconciliation private/reconciliation.json`. The importer selects a parser from the page's own heading rather than its filename.
 
+Verify the private evidence set before or after a backup:
+
+```text
+systmonline-fhir-verify private/capture-set-manifest.json
+```
+
 The pipeline retains each source page first, verifies that the parser saw the same SHA-256 content, then stores derived events and writes the reviewable exports.
 
 Version 0.3.0 adds format-specific parsing for the Summary Patient Record, Childhood Vaccinations and Test Results index. Index listings are deliberately represented as reviewable source facts rather than final clinical Observations until their detail pages have been captured. Reimports are idempotent and produce a per-page reconciliation report with unknown-date and review counts.
