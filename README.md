@@ -21,6 +21,19 @@ Historical Read codes are retained and mapped through SNOMED CT before ICD class
 
 Raw captured pages are retained byte-for-byte in the importer database before parsing. Derived events and coding assertions carry confidence, method and review state; anything below 100% confidence is highlighted automatically. See [Data trust model](docs/DATA-TRUST-MODEL.md).
 
+The capture engine now follows paginated records with a configurable pause and page limit. Every HTTP response is saved and checksummed before it is inspected, including an unexpected login page. It stops safely on session expiry, HTTP errors, pagination loops or the page limit, and writes a resumable partial manifest when interrupted. Live authenticated capture is intentionally not yet enabled: that will be tested interactively without storing credentials in this repository.
+
+Saved pages can be ingested into the evidence database and exported together:
+
+```text
+systmonline-fhir saved-page-*.html \
+  --database private/records.sqlite3 \
+  --canonical private/canonical.json \
+  --fhir private/bundle.json
+```
+
+The pipeline retains each source page first, verifies that the parser saw the same SHA-256 content, then stores derived events and writes the reviewable exports.
+
 ## Safety boundary
 
 This project organises a person's own records. It does not diagnose, recommend treatment, interpret genomic variants, or replace a clinician. Imported content must retain its source and be treated as unverified until reviewed.

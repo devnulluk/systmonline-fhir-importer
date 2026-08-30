@@ -8,3 +8,5 @@ private/
 !tests/fixtures/*.html
 *.pdf
 *.env
+*.sqlite
+*.sqlite3
