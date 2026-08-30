@@ -11,7 +11,9 @@ UK Core is used as the principal representation wherever its published profiles 
 
 ## Terminology
 
-Prefer source codes when SystmOnline exposes them. UK clinical concepts should use SNOMED CT; medicines should use dm+d. Human-readable text must be retained even when no trustworthy code is available. The importer must never invent a code from prose. NHS-number handling will follow the UK Core Patient identifier rules and will be optional in public/synthetic fixtures.
+Prefer source codes when SystmOnline exposes them. UK clinical concepts should use SNOMED CT; medicines should use dm+d. Historical Read v2 and CTV3 codes are preserved and migrated through authorised NHS maps. ICD-10 is derived from SNOMED CT using the national cross-map; ICD-11 MMS may be added separately through the WHO API. Human-readable text must be retained even when no trustworthy code is available. The importer must never invent a code from prose. NHS-number handling will follow the UK Core Patient identifier rules and will be optional in public/synthetic fixtures.
+
+See [Terminology and classification](TERMINOLOGY.md).
 
 ## Validation gates
 

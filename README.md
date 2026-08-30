@@ -17,6 +17,10 @@ The first parser handles SystmOnline's date/author/organisation header rows foll
 
 See [NHS and UK Core conformance](docs/NHS-CONFORMANCE.md) for the profile, terminology and validation policy.
 
+Historical Read codes are retained and mapped through SNOMED CT before ICD classification. The mapping chain and versions remain auditable; see [Terminology and classification](docs/TERMINOLOGY.md).
+
+Raw captured pages are retained byte-for-byte in the importer database before parsing. Derived events and coding assertions carry confidence, method and review state; anything below 100% confidence is highlighted automatically. See [Data trust model](docs/DATA-TRUST-MODEL.md).
+
 ## Safety boundary
 
 This project organises a person's own records. It does not diagnose, recommend treatment, interpret genomic variants, or replace a clinician. Imported content must retain its source and be treated as unverified until reviewed.
