@@ -86,6 +86,28 @@ class RecordStore:
     ) -> int:
         if not 0 <= confidence <= 1:
             raise ValueError("confidence must be between 0 and 1")
+        existing = self.connection.execute(
+            """SELECT id FROM parsed_event
+            WHERE capture_sha256 = ? AND source_file = ? AND event_date = ? AND author = ?
+              AND organisation = ? AND entry_type = ? AND source_text = ? AND parser_version = ?""",
+            (
+                event.source_sha256,
+                event.source_file,
+                event.date,
+                event.author,
+                event.organisation,
+                event.entry_type,
+                event.text,
+                parser_version,
+            ),
+        ).fetchone()
+        if existing:
+            self.connection.execute(
+                "UPDATE parsed_event SET parse_confidence = ?, parse_notes = ? WHERE id = ?",
+                (confidence, json.dumps(notes or []), int(existing[0])),
+            )
+            self.connection.commit()
+            return int(existing[0])
         cursor = self.connection.execute(
             """INSERT INTO parsed_event
             (capture_sha256, source_file, event_date, author, organisation, entry_type,
@@ -162,8 +184,51 @@ class RecordStore:
         ).fetchall()
         return [dict(row) for row in rows]
 
+    def event_review_queue(self) -> list[dict]:
+        rows = self.connection.execute(
+            """WITH ranked AS (
+                SELECT *, row_number() OVER (
+                    PARTITION BY capture_sha256, source_file, event_date, author,
+                                 organisation, entry_type, source_text
+                    ORDER BY id DESC
+                ) AS revision_rank
+                FROM parsed_event
+            )
+            SELECT * FROM ranked
+            WHERE revision_rank = 1 AND (parse_confidence < 1 OR parse_notes != '[]')
+            ORDER BY parse_confidence ASC, id"""
+        ).fetchall()
+        return [dict(row) for row in rows]
+
     def counts(self) -> dict[str, int]:
         return {
             table: int(self.connection.execute(f"SELECT count(*) FROM {table}").fetchone()[0])
             for table in ("raw_capture", "parsed_event", "coding_assertion", "analysis_finding")
         }
+
+    def events(self) -> list[RecordEvent]:
+        rows = self.connection.execute(
+            """WITH ranked AS (
+                SELECT *, row_number() OVER (
+                    PARTITION BY capture_sha256, source_file, event_date, author,
+                                 organisation, entry_type, source_text
+                    ORDER BY id DESC
+                ) AS revision_rank
+                FROM parsed_event
+            )
+            SELECT event_date, author, organisation, entry_type, source_text,
+                   source_file, capture_sha256
+            FROM ranked WHERE revision_rank = 1 ORDER BY event_date, id"""
+        ).fetchall()
+        return [
+            RecordEvent(
+                row["event_date"],
+                row["author"],
+                row["organisation"],
+                row["entry_type"],
+                row["source_text"],
+                row["source_file"],
+                row["capture_sha256"],
+            )
+            for row in rows
+        ]

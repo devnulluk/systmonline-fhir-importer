@@ -14,6 +14,7 @@ def test_retains_raw_source_and_highlights_uncertain_mapping(tmp_path):
         digest = store.retain_capture(content, "https://example.invalid/patient-record")
         assert digest == event.source_sha256
         event_id = store.add_event(event, "0.1.0")
+        assert store.add_event(event, "0.1.0") == event_id
         store.add_coding(
             event_id,
             Coding(SNOMED_CT, "synthetic-proposal", "Synthetic mapping"),
@@ -31,5 +32,7 @@ def test_retains_raw_source_and_highlights_uncertain_mapping(tmp_path):
         assert len(queue) == 1
         assert queue[0]["confidence"] == 0.82
         assert queue[0]["review_required"] == 1
+        assert store.event_review_queue() == []
+        assert store.events() == [event]
     finally:
         store.close()

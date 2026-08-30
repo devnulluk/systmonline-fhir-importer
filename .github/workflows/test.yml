@@ -16,3 +16,27 @@ jobs:
       - run: pip install -e '.[dev]'
       - run: ruff check .
       - run: pytest -q
+
+  fhir-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: pip install -e .
+      - name: Build synthetic FHIR bundle
+        run: |
+          systmonline-fhir tests/fixtures/synthetic_record.html \
+            --database /tmp/synthetic.sqlite3 \
+            --canonical /tmp/canonical.json \
+            --fhir /tmp/bundle.json
+      - name: Download current HL7-maintained validator
+        run: curl --fail --location --silent --show-error --output /tmp/validator_cli.jar https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
+      - name: Validate FHIR R4 against UK Core STU2
+        run: java -jar /tmp/validator_cli.jar /tmp/bundle.json -version 4.0.1 -ig fhir.r4.ukcore.stu2#2.0.1 -tx n/a

@@ -21,6 +21,8 @@ Historical Read codes are retained and mapped through SNOMED CT before ICD class
 
 Raw captured pages are retained byte-for-byte in the importer database before parsing. Derived events and coding assertions carry confidence, method and review state; anything below 100% confidence is highlighted automatically. See [Data trust model](docs/DATA-TRUST-MODEL.md).
 
+See [Capture and reconciliation](docs/CAPTURE-AND-RECONCILIATION.md) for the private-evidence boundary, safe stopping conditions, duplicate handling and clinical-completeness states.
+
 The capture engine now follows paginated records with a configurable pause and page limit. Every HTTP response is saved and checksummed before it is inspected, including an unexpected login page. It stops safely on session expiry, HTTP errors, pagination loops or the page limit, and writes a resumable partial manifest when interrupted. Live authenticated capture is intentionally not yet enabled: that will be tested interactively without storing credentials in this repository.
 
 Saved pages can be ingested into the evidence database and exported together:
@@ -32,7 +34,13 @@ systmonline-fhir saved-page-*.html \
   --fhir private/bundle.json
 ```
 
+For a mixed capture set, add `--auto-detect` and `--reconciliation private/reconciliation.json`. The importer selects a parser from the page's own heading rather than its filename.
+
 The pipeline retains each source page first, verifies that the parser saw the same SHA-256 content, then stores derived events and writes the reviewable exports.
+
+Version 0.3.0 adds format-specific parsing for the Summary Patient Record, Childhood Vaccinations and Test Results index. Index listings are deliberately represented as reviewable source facts rather than final clinical Observations until their detail pages have been captured. Reimports are idempotent and produce a per-page reconciliation report with unknown-date and review counts.
+
+Continuous integration validates a synthetic bundle with the HL7-maintained validator against FHIR R4 4.0.1 and `fhir.r4.ukcore.stu2#2.0.1`. Real records never enter CI or the repository.
 
 ## Safety boundary
 

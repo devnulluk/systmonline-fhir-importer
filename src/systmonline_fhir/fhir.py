@@ -47,15 +47,27 @@ def _resource(event: RecordEvent, patient_id: str) -> dict:
         }],
     }
     if resource_type == "Condition":
-        resource.update({"recordedDate": event.date, "code": {"text": event.text}})
+        resource.update({"code": {"text": event.text}})
+        if event.date != "unknown":
+            resource["recordedDate"] = event.date
     elif resource_type == "MedicationStatement":
-        resource.update({"status": "unknown", "dateAsserted": event.date, "medicationCodeableConcept": {"text": event.text}})
+        resource.update({"status": "unknown", "medicationCodeableConcept": {"text": event.text}})
+        if event.date != "unknown":
+            resource["dateAsserted"] = event.date
     elif resource_type == "AllergyIntolerance":
-        resource.update({"recordedDate": event.date, "code": {"text": event.text}, "patient": resource.pop("subject")})
+        resource.update({"code": {"text": event.text}, "patient": resource.pop("subject")})
+        if event.date != "unknown":
+            resource["recordedDate"] = event.date
     elif resource_type == "Immunization":
-        resource.update({"status": "completed", "occurrenceDateTime": event.date, "vaccineCode": {"text": event.text}, "patient": resource.pop("subject")})
+        resource.update({"status": "completed", "vaccineCode": {"text": event.text}, "patient": resource.pop("subject")})
+        if event.date != "unknown":
+            resource["occurrenceDateTime"] = event.date
+        else:
+            resource["occurrenceString"] = "Date not supplied by source view"
     elif resource_type == "Observation":
-        resource.update({"status": "final", "effectiveDateTime": event.date, "code": {"text": event.entry_type}, "valueString": event.text})
+        resource.update({"status": "final", "code": {"text": event.entry_type}, "valueString": event.text})
+        if event.date != "unknown":
+            resource["effectiveDateTime"] = event.date
     elif resource_type == "DocumentReference":
         resource.update({"status": "current", "date": event.date, "description": event.text, "content": []})
     else:
