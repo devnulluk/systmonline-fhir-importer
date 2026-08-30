@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from datetime import datetime
+import json
+from dataclasses import asdict, dataclass
+from datetime import date
 from hashlib import sha256
 from pathlib import Path
-import json
+from time import strptime
 
 from bs4 import BeautifulSoup
 
@@ -27,7 +28,8 @@ def _date(value: str) -> str | None:
     value = " ".join(value.split())
     for fmt in ("%d %b %Y", "%d/%m/%Y"):
         try:
-            return datetime.strptime(value, fmt).date().isoformat()
+            parsed = strptime(value, fmt)
+            return date(parsed.tm_year, parsed.tm_mon, parsed.tm_mday).isoformat()
         except ValueError:
             pass
     return None

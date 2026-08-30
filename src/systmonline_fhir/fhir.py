@@ -4,6 +4,9 @@ from uuid import NAMESPACE_URL, uuid5
 
 from .parser import RecordEvent
 
+UK_CORE_CANONICAL = "https://fhir.hl7.org.uk/StructureDefinition"
+UK_CORE_PACKAGE = "fhir.r4.ukcore.stu2#2.0.1"
+
 
 RESOURCE_TYPES = {
     "problem": "Condition",
@@ -16,15 +19,27 @@ RESOURCE_TYPES = {
     "attachment": "DocumentReference",
 }
 
+UK_CORE_PROFILES = {
+    "Patient": f"{UK_CORE_CANONICAL}/UKCore-Patient",
+    "Condition": f"{UK_CORE_CANONICAL}/UKCore-Condition",
+    "MedicationStatement": f"{UK_CORE_CANONICAL}/UKCore-MedicationStatement",
+    "AllergyIntolerance": f"{UK_CORE_CANONICAL}/UKCore-AllergyIntolerance",
+    "Immunization": f"{UK_CORE_CANONICAL}/UKCore-Immunization",
+    "Observation": f"{UK_CORE_CANONICAL}/UKCore-Observation",
+}
+
 
 def _resource(event: RecordEvent, patient_id: str) -> dict:
     resource_type = RESOURCE_TYPES.get(event.entry_type.casefold(), "Basic")
-    stable = "|".join((event.date, event.entry_type, event.text, event.source_sha256))
+    stable = f"{event.date}|{event.entry_type}|{event.text}|{event.source_sha256}"
     identifier = str(uuid5(NAMESPACE_URL, stable))
     resource: dict = {
         "resourceType": resource_type,
         "id": identifier,
-        "meta": {"source": f"urn:sha256:{event.source_sha256}"},
+        "meta": {
+            "source": f"urn:sha256:{event.source_sha256}",
+            **({"profile": [UK_CORE_PROFILES[resource_type]]} if resource_type in UK_CORE_PROFILES else {}),
+        },
         "subject": {"reference": f"Patient/{patient_id}"},
         "extension": [{
             "url": "https://devnull.co.uk/fhir/StructureDefinition/source-entry-type",
@@ -36,7 +51,7 @@ def _resource(event: RecordEvent, patient_id: str) -> dict:
     elif resource_type == "MedicationStatement":
         resource.update({"status": "unknown", "dateAsserted": event.date, "medicationCodeableConcept": {"text": event.text}})
     elif resource_type == "AllergyIntolerance":
-        resource.update({"recordedDate": event.date, "code": {"text": event.text}})
+        resource.update({"recordedDate": event.date, "code": {"text": event.text}, "patient": resource.pop("subject")})
     elif resource_type == "Immunization":
         resource.update({"status": "completed", "occurrenceDateTime": event.date, "vaccineCode": {"text": event.text}, "patient": resource.pop("subject")})
     elif resource_type == "Observation":
@@ -49,10 +64,10 @@ def _resource(event: RecordEvent, patient_id: str) -> dict:
 
 
 def bundle(events: list[RecordEvent], patient_id: str = "personal-record") -> dict:
-    patient = {"resourceType": "Patient", "id": patient_id}
+    patient = {"resourceType": "Patient", "id": patient_id, "meta": {"profile": [UK_CORE_PROFILES["Patient"]]}}
     resources = [patient, *(_resource(event, patient_id) for event in events)]
     return {
         "resourceType": "Bundle",
         "type": "collection",
-        "entry": [{"fullUrl": f"urn:uuid:{item['id']}", "resource": item} for item in resources],
+        "entry": [{"fullUrl": f"https://healthdata.devnull.co.uk/fhir/{item['resourceType']}/{item['id']}", "resource": item} for item in resources],
     }
