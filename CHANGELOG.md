@@ -9,6 +9,7 @@
 - Deduplicate identical derived FHIR resources while retaining and reporting duplicate source evidence.
 - Add automated FHIR R4 and UK Core STU2 validation in continuous integration.
 - Add a capture-manifest integrity verifier for backup and tamper checks.
+- Add detailed test-result parsing and conservative index-to-detail reconciliation.
 
 ## 0.2.0
 

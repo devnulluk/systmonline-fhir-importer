@@ -44,9 +44,20 @@ Verify the private evidence set before or after a backup:
 systmonline-fhir-verify private/capture-set-manifest.json
 ```
 
+Export only the current parser revision of each logical event:
+
+```text
+systmonline-fhir-export \
+  --database private/records.sqlite3 \
+  --canonical private/canonical-current.json \
+  --fhir private/bundle-current.json
+```
+
 The pipeline retains each source page first, verifies that the parser saw the same SHA-256 content, then stores derived events and writes the reviewable exports.
 
 Version 0.3.0 adds format-specific parsing for the Summary Patient Record, Childhood Vaccinations and Test Results index. Index listings are deliberately represented as reviewable source facts rather than final clinical Observations until their detail pages have been captured. Reimports are idempotent and produce a per-page reconciliation report with unknown-date and review counts.
+
+Detailed result pages can now be parsed and reconciled to their index entries. Because the detail view does not repeat SystmOnline's opaque result identifier, linkage uses capture order plus an exact result-type cross-check and remains visibly marked at 99% confidence. It is never silently described as certain.
 
 Continuous integration validates a synthetic bundle with the HL7-maintained validator against FHIR R4 4.0.1 and `fhir.r4.ukcore.stu2#2.0.1`. Real records never enter CI or the repository.
 

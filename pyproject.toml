@@ -10,6 +10,7 @@ dev = ["pytest>=8,<9", "ruff>=0.12,<1"]
 
 [project.scripts]
 systmonline-fhir = "systmonline_fhir.cli:main"
+systmonline-fhir-export = "systmonline_fhir.export:main"
 systmonline-fhir-verify = "systmonline_fhir.verify:main"
 
 [build-system]
