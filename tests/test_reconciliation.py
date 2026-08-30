@@ -19,9 +19,9 @@ def test_reconciles_mixed_views_and_is_idempotent(tmp_path: Path):
     first = ingest_supported_views(pages, store, report_path=report)
     second = ingest_supported_views(pages, store, report_path=report)
 
-    assert len(first) == len(second) == 7
+    assert len(first) == len(second) == 8
     assert store.counts()["raw_capture"] == 4
-    assert store.counts()["parsed_event"] == 7
+    assert store.counts()["parsed_event"] == 8
     rows = json.loads(report.read_text(encoding="utf-8"))
     assert {row["source_kind"] for row in rows} == {
         "patient_record",

@@ -15,9 +15,9 @@ def test_pipeline_retains_source_before_persisting_events(tmp_path: Path):
         fhir_path=tmp_path / "bundle.json",
     )
 
-    assert len(events) == 2
+    assert len(events) == 3
     assert store.counts()["raw_capture"] == 1
-    assert store.counts()["parsed_event"] == 2
+    assert store.counts()["parsed_event"] == 3
     assert (tmp_path / "canonical.json").exists()
     assert (tmp_path / "bundle.json").exists()
     store.close()

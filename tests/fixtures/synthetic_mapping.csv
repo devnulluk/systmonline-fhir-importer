@@ -1,0 +1,3 @@
+source_system,source_code,source_display,source_version,target_system,target_code,target_display,target_version,map_identifier,map_version,relationship,advice
+http://read.info/readv2,R1234,Synthetic source,2016,http://snomed.info/sct,123456789,Synthetic target,20260701,nhs-read-to-snomed,synthetic-1,equivalent,Synthetic fixture only
+http://snomed.info/sct,123456789,Synthetic target,20260701,http://hl7.org/fhir/sid/icd-10,A00.0,Synthetic classification,2026,nhs-snomed-to-icd10,synthetic-1,related-to,Synthetic fixture only

@@ -84,14 +84,49 @@ def parse_patient_record(path: Path) -> list[RecordEvent]:
     events: list[RecordEvent] = []
     context: tuple[str, str, str] | None = None
 
-    for row in soup.select("tr"):
+    entry_types = {
+        "attachment",
+        "blood pressure",
+        "coded entry",
+        "communication",
+        "drug sensitivity",
+        "letter",
+        "medication",
+        "medication template",
+        "note",
+        "problem",
+        "recall",
+        "referral out",
+        "test request",
+        "test result",
+        "vaccination",
+    }
+    tables = soup.select("main table") or soup.select("table")
+
+    def entry_score(table) -> int:
+        return sum(
+            1
+            for row in table.select("tr")
+            if (cells := row.select(":scope > td"))
+            and _clean(cells[0].get_text(" ", strip=True)).casefold() in entry_types
+        )
+
+    record_table = max(tables, key=entry_score, default=None)
+    if record_table is None or entry_score(record_table) == 0:
+        return []
+
+    for row in record_table.select("tr"):
         cells = [" ".join(cell.get_text(" ", strip=True).split()) for cell in row.select(":scope > td")]
         if len(cells) >= 3 and (parsed := _date(cells[0])):
             context = (parsed, cells[1], cells[2])
             continue
-        if context and len(cells) >= 2 and cells[0] and cells[1]:
+        if (
+            context
+            and len(cells) >= 2
+            and cells[0].casefold() in entry_types
+            and cells[1]
+        ):
             events.append(RecordEvent(*context, cells[0], cells[1], path.name, digest))
-            context = None
     return events
 
 

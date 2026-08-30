@@ -19,6 +19,8 @@ See [NHS and UK Core conformance](docs/NHS-CONFORMANCE.md) for the profile, term
 
 Historical Read codes are retained and mapped through SNOMED CT before ICD classification. The mapping chain and versions remain auditable; see [Terminology and classification](docs/TERMINOLOGY.md).
 
+Licensed mapping files are checksum-pinned and kept private; see [Mapping assets](docs/MAPPING-ASSETS.md). Version 0.4.0 also reports explicit-code coverage without printing clinical text and refuses to invent a code from an unlabelled description.
+
 Raw captured pages are retained byte-for-byte in the importer database before parsing. Derived events and coding assertions carry confidence, method and review state; anything below 100% confidence is highlighted automatically. See [Data trust model](docs/DATA-TRUST-MODEL.md).
 
 See [Capture and reconciliation](docs/CAPTURE-AND-RECONCILIATION.md) for the private-evidence boundary, safe stopping conditions, duplicate handling and clinical-completeness states.

@@ -6,9 +6,14 @@ from systmonline_fhir.parser import parse_patient_record
 
 def test_parses_synthetic_record_and_builds_stable_fhir_bundle():
     events = parse_patient_record(Path(__file__).parent / "fixtures" / "synthetic_record.html")
-    assert [event.entry_type for event in events] == ["Test result", "Medication"]
+    assert [event.entry_type for event in events] == ["Test result", "Note", "Medication"]
     result = bundle(events)
-    assert [entry["resource"]["resourceType"] for entry in result["entry"]] == ["Patient", "Observation", "MedicationStatement"]
+    assert [entry["resource"]["resourceType"] for entry in result["entry"]] == [
+        "Patient",
+        "Observation",
+        "Basic",
+        "MedicationStatement",
+    ]
     assert bundle(events) == result
     assert UK_CORE_PACKAGE == "fhir.r4.ukcore.stu2#2.0.1"
     assert result["entry"][0]["resource"]["meta"]["profile"] == [

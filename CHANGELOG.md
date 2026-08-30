@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- Correct grouped Patient Record parsing so every recognised entry under a source header is retained.
+- Restrict timeline parsing to the actual record table and recognised SystmOnline entry types.
+- Add privacy-preserving explicit-code coverage reporting.
+- Add checksum- and licence-gated mapping asset loading.
+- Preserve all versioned mapping paths and prohibit Read-to-ICD shortcuts.
+
 ## 0.3.0
 
 - Add format-specific Summary Patient Record, Childhood Vaccinations and Test Results index parsers.
