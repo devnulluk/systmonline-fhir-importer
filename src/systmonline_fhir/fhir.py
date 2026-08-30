@@ -38,13 +38,16 @@ def _resource(event: RecordEvent, patient_id: str) -> dict:
         "id": identifier,
         "meta": {
             "source": f"urn:sha256:{event.source_sha256}",
+            "tag": [
+                {
+                    "system": "https://devnull.co.uk/fhir/CodeSystem/source-entry-type",
+                    "code": event.entry_type.casefold().replace(" ", "-"),
+                    "display": event.entry_type,
+                }
+            ],
             **({"profile": [UK_CORE_PROFILES[resource_type]]} if resource_type in UK_CORE_PROFILES else {}),
         },
         "subject": {"reference": f"Patient/{patient_id}"},
-        "extension": [{
-            "url": "https://devnull.co.uk/fhir/StructureDefinition/source-entry-type",
-            "valueString": event.entry_type,
-        }],
     }
     if resource_type == "Condition":
         resource.update({"code": {"text": event.text}})
@@ -71,7 +74,12 @@ def _resource(event: RecordEvent, patient_id: str) -> dict:
     elif resource_type == "DocumentReference":
         resource.update({"status": "current", "date": event.date, "description": event.text, "content": []})
     else:
-        resource.update({"created": event.date, "code": {"text": event.entry_type}, "extension": resource["extension"] + [{"url": "https://devnull.co.uk/fhir/StructureDefinition/source-text", "valueString": event.text}]})
+        resource.update(
+            {
+                "created": event.date,
+                "code": {"text": f"{event.entry_type}: {event.text}"},
+            }
+        )
     return resource
 
 
