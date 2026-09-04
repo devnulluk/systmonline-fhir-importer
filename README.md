@@ -2,6 +2,8 @@
 
 An experimental, source-preserving importer for personal GP records viewed through SystmOnline. It converts locally saved patient-record pages into a reviewable canonical JSON file and an NHS-aligned FHIR R4 collection Bundle.
 
+It also accepts Patients Know Best FHIR R4 Bundles. The complete Bundle is retained before supported resources and source codings are added to the same evidence database. See [Patients Know Best support](docs/PATIENTS-KNOW-BEST.md).
+
 ## Principles
 
 - The person and their longitudinal record are the centre—not the GP system.
@@ -38,6 +40,14 @@ systmonline-fhir saved-page-*.html \
   --database private/records.sqlite3 \
   --canonical private/canonical.json \
   --fhir private/bundle.json
+```
+
+Import a PKB FHIR Bundle into the same evidence database:
+
+```text
+pkb-fhir-import private/pkb-bundle.json \
+  --database private/records.sqlite3 \
+  --source-uri pkb-fhir-export
 ```
 
 For a mixed capture set, add `--auto-detect` and `--reconciliation private/reconciliation.json`. The importer selects a parser from the page's own heading rather than its filename.

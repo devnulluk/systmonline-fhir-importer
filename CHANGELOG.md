@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- Add source-preserving import of Patients Know Best FHIR R4 Bundles.
+- Retain PKB-provided terminology codings as exact source assertions.
+- Document the OAuth/FHIR synchronization boundary and safe incremental design.
+
 ## 0.4.0
 
 - Correct grouped Patient Record parsing so every recognised entry under a source header is retained.

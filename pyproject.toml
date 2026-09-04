@@ -1,7 +1,7 @@
 [project]
 name = "systmonline-fhir-importer"
-version = "0.4.0"
-description = "Preserve SystmOnline patient-record exports and convert them to reviewable FHIR R4 bundles."
+version = "0.5.0"
+description = "Preserve SystmOnline and Patients Know Best records as reviewable FHIR evidence."
 requires-python = ">=3.12"
 dependencies = ["beautifulsoup4>=4.12,<5"]
 
@@ -13,6 +13,7 @@ systmonline-fhir = "systmonline_fhir.cli:main"
 systmonline-fhir-export = "systmonline_fhir.export:main"
 systmonline-fhir-terminology-audit = "systmonline_fhir.terminology_audit:main"
 systmonline-fhir-verify = "systmonline_fhir.verify:main"
+pkb-fhir-import = "systmonline_fhir.pkb:main"
 
 [build-system]
 requires = ["hatchling"]
