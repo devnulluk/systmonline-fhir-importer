@@ -78,6 +78,20 @@ def test_rejects_non_bundle_json(tmp_path):
         store.close()
 
 
+def test_rejects_bundle_with_non_array_entries(tmp_path):
+    source = tmp_path / "invalid-entries.json"
+    source.write_text(
+        '{"resourceType":"Bundle","entry":{"resourceType":"Observation"}}',
+        encoding="utf-8",
+    )
+    store = RecordStore(tmp_path / "records.sqlite3")
+    try:
+        with pytest.raises(TypeError, match="entry must be an array"):
+            import_bundle(source, store)
+    finally:
+        store.close()
+
+
 def test_captures_supported_codeable_concept_fields_without_recursive_inference(tmp_path):
     source = tmp_path / "pkb.json"
     source.write_text(

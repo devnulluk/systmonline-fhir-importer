@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .parser import RecordEvent
 from .store import RecordStore
@@ -142,7 +143,7 @@ def import_bundle(
     digest = store.retain_capture(raw, source_uri, "application/fhir+json")
     entries = bundle.get("entry", [])
     if not isinstance(entries, list):
-        raise ValueError("FHIR Bundle entry must be an array")
+        raise TypeError("FHIR Bundle entry must be an array")
 
     added = 0
     skipped = 0
