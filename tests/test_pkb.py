@@ -76,3 +76,59 @@ def test_rejects_non_bundle_json(tmp_path):
             import_bundle(source, store)
     finally:
         store.close()
+
+
+def test_captures_supported_codeable_concept_fields_without_recursive_inference(tmp_path):
+    source = tmp_path / "pkb.json"
+    source.write_text(
+        json.dumps(
+            {
+                "resourceType": "Bundle",
+                "type": "collection",
+                "entry": [
+                    {
+                        "resource": {
+                            "resourceType": "Appointment",
+                            "id": "appointment-1",
+                            "status": "booked",
+                            "reasonCode": {
+                                "coding": [
+                                    {
+                                        "system": "http://snomed.info/sct",
+                                        "code": "123",
+                                        "display": "Source reason",
+                                    }
+                                ]
+                            },
+                            "extension": [
+                                {
+                                    "url": "https://example.invalid/extension",
+                                    "valueCodeableConcept": {
+                                        "coding": [
+                                            {
+                                                "system": "http://snomed.info/sct",
+                                                "code": "999",
+                                            }
+                                        ]
+                                    },
+                                }
+                            ],
+                        }
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    store = RecordStore(tmp_path / "records.sqlite3")
+    try:
+        result = import_bundle(source, store)
+        assert result.events_added == 1
+        codings = store.connection.execute(
+            "SELECT system, code, display FROM coding_assertion ORDER BY code"
+        ).fetchall()
+        assert [(row["system"], row["code"], row["display"]) for row in codings] == [
+            ("http://snomed.info/sct", "123", "Source reason")
+        ]
+    finally:
+        store.close()

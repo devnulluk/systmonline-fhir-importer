@@ -109,7 +109,22 @@ def _codings(value: Any) -> Iterable[Coding]:
 
 def _resource_codings(resource: dict[str, Any]) -> Iterable[Coding]:
     seen: set[tuple[str, str, str | None]] = set()
-    for key in ("code", "category", "medicationCodeableConcept", "vaccineCode", "type"):
+    # Keep this list explicit.  These are the CodeableConcept fields that
+    # commonly carry clinically meaningful source assertions in the supported
+    # resource set.  Do not recursively walk arbitrary JSON: that could turn
+    # administrative or narrative extensions into false clinical codings.
+    for key in (
+        "code",
+        "category",
+        "medicationCodeableConcept",
+        "vaccineCode",
+        "type",
+        "reasonCode",
+        "reasonReference",
+        "serviceType",
+        "verificationStatus",
+        "conclusionCode",
+    ):
         for coding in _codings(resource.get(key)):
             identity = (coding.system, coding.code, coding.version)
             if identity not in seen:
