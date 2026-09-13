@@ -37,4 +37,6 @@ Exact duplicate rows remain present in the captured evidence and are counted in 
 
 A test-results index proves only that a result is listed. It is represented as a reviewable source fact, not as a final laboratory Observation. It can become a clinical Observation only after the corresponding detail page has been captured and parsed.
 
+Detailed test-result pages may also contain a rendered `Pathology Investigations` block below the summary table. Parser v0.6 extracts only rows with an explicit numeric value, optional comparator, unit and bracketed reference interval. Narrative targets and comments remain source interpretation text and are never converted into laboratory reference intervals. The complete rendered page remains the authoritative retained evidence.
+
 Unknown dates are represented explicitly and enter the event review queue. Missing authors or organisations in a summary view are labelled `Not supplied by source view`; they are never inferred from another page.

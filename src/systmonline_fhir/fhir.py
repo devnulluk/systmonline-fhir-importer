@@ -14,6 +14,7 @@ RESOURCE_TYPES = {
     "drug sensitivity": "AllergyIntolerance",
     "vaccination": "Immunization",
     "test result": "Observation",
+    "laboratory observation": "Observation",
     "blood pressure": "Observation",
     "letter": "DocumentReference",
     "attachment": "DocumentReference",

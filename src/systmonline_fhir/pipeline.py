@@ -13,10 +13,11 @@ from .parser import (
     parse_supported_view,
     parse_test_result_detail,
     parse_test_results_index,
+    pathology_events,
 )
 from .store import RecordStore
 
-PARSER_VERSION = "0.4.0"
+PARSER_VERSION = "0.6.0"
 
 
 @dataclass(frozen=True)
@@ -108,6 +109,10 @@ def ingest_test_result_details(
         event, confidence, notes = link_test_result_detail(index_event, detail)
         store.add_event(event, PARSER_VERSION, confidence, notes)
         events.append(event)
+        observations = pathology_events(detail_path, index_event, detail)
+        for observation in observations:
+            store.add_event(observation, PARSER_VERSION, confidence, notes)
+        events.extend(observations)
         report.append(
             {
                 "sequence": sequence,
@@ -116,6 +121,7 @@ def ingest_test_result_details(
                 "confidence": confidence,
                 "review_required": confidence < 1,
                 "notes": notes,
+                "laboratory_observations": len(observations),
             }
         )
     if report_path:

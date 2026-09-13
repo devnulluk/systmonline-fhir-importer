@@ -37,6 +37,17 @@ class TestResultDetail:
     source_sha256: str
 
 
+@dataclass(frozen=True)
+class LaboratoryObservation:
+    name: str
+    value: float
+    comparator: str
+    unit: str
+    reference_low: float | None
+    reference_high: float | None
+    narrative: str
+
+
 def _date(value: str) -> str | None:
     value = " ".join(value.split())
     for fmt in ("%d %b %Y", "%d/%m/%Y"):
@@ -219,6 +230,63 @@ def parse_test_result_detail(path: Path) -> TestResultDetail | None:
         source_file=path.name,
         source_sha256=digest,
     )
+
+
+LAB_RESULT = re.compile(
+    r"^(?P<name>[A-Z][^;]*?)\s+(?P<comparator>[<>]?)"
+    r"(?P<value>-?\d+(?:\.\d+)?)"
+    r"(?:\s+(?P<unit>[A-Za-zµμ%][A-Za-z0-9µμ/%^²·.-]*))?"
+    r"(?:\s*\[(?P<low>-?\d+(?:\.\d+)?)\s*(?:-|–|to)\s*"
+    r"(?P<high>-?\d+(?:\.\d+)?)\])?"
+    r"(?:;\s*(?P<narrative>.*))?$"
+)
+
+
+def parse_pathology_observations(path: Path) -> list[LaboratoryObservation]:
+    """Parse only explicit numeric rows in the retained Pathology Investigations block."""
+    soup = BeautifulSoup(path.read_bytes(), "html.parser")
+    main = soup.find("main")
+    if main is None:
+        return []
+    lines = [_clean(str(child)) for child in main.children if isinstance(child, str) and _clean(str(child))]
+    try:
+        start = next(i for i, line in enumerate(lines) if line.casefold() == "pathology investigations") + 1
+        end = next(i for i, line in enumerate(lines[start:], start) if line.casefold() == "general information")
+    except StopIteration:
+        return []
+    observations: list[LaboratoryObservation] = []
+    for line in lines[start:end]:
+        match = LAB_RESULT.match(line)
+        if match:
+            observations.append(LaboratoryObservation(
+                name=match.group("name").strip(), value=float(match.group("value")),
+                comparator=match.group("comparator"), unit=match.group("unit") or "",
+                reference_low=float(match.group("low")) if match.group("low") else None,
+                reference_high=float(match.group("high")) if match.group("high") else None,
+                narrative=(match.group("narrative") or "").strip(),
+            ))
+        elif observations and (line[:1].islower() or line[:1].isdigit()):
+            previous = observations[-1]
+            observations[-1] = LaboratoryObservation(
+                **{**asdict(previous), "narrative": " ".join(filter(None, [previous.narrative, line]))}
+            )
+    return observations
+
+
+def pathology_events(path: Path, index_event: RecordEvent, detail: TestResultDetail) -> list[RecordEvent]:
+    events: list[RecordEvent] = []
+    for observation in parse_pathology_observations(path):
+        fields = [
+            f"Test: {observation.name}", f"Value: {observation.comparator}{observation.value:g}",
+            f"Unit: {observation.unit}" if observation.unit else "Unit: not supplied",
+            f"Panel: {detail.tests}",
+        ]
+        if observation.reference_low is not None and observation.reference_high is not None:
+            fields.extend([f"Reference low: {observation.reference_low:g}", f"Reference high: {observation.reference_high:g}"])
+        if observation.narrative:
+            fields.append(f"Source interpretation: {observation.narrative}")
+        events.append(RecordEvent(index_event.date, detail.filed_by or "Not supplied by source view", "Not supplied by source view", "Laboratory observation", "; ".join(fields), path.name, detail.source_sha256))
+    return events
 
 
 def link_test_result_detail(
