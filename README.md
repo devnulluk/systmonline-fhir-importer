@@ -31,6 +31,24 @@ See [Capture and reconciliation](docs/CAPTURE-AND-RECONCILIATION.md) for the pri
 
 The [authorised live-capture runbook](docs/LIVE-CAPTURE-RUNBOOK.md) defines the read-only browser boundary and the next test-result-detail capture procedure.
 
+## Runtime credentials
+
+The unattended capture runtime accepts either direct environment variables or file-backed secrets. File-backed values take precedence and are recommended for Mobius:
+
+```text
+SYSTMONLINE_USERNAME_FILE=/run/secrets/systmonline_username
+SYSTMONLINE_PASSWORD_FILE=/run/secrets/systmonline_password
+```
+
+For a simpler Portainer deployment, the fallback is:
+
+```text
+SYSTMONLINE_USERNAME=your-username
+SYSTMONLINE_PASSWORD=your-password
+```
+
+Do not set real values in Compose files, Git, shell command arguments or Obsidian. A configured `*_FILE` that is missing or empty causes startup to fail; it never silently falls back to the less secure environment value. Credential objects redact both fields from their representation, and errors name only the missing setting.
+
 The capture engine now follows paginated records with a configurable pause and page limit. Every HTTP response is saved and checksummed before it is inspected, including an unexpected login page. It stops safely on session expiry, HTTP errors, pagination loops or the page limit, and writes a resumable partial manifest when interrupted. Live authenticated capture is intentionally not yet enabled: that will be tested interactively without storing credentials in this repository.
 
 Saved pages can be ingested into the evidence database and exported together:

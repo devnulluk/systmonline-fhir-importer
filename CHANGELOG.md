@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1
+
+- Load unattended SystmOnline credentials from environment variables or preferred file-backed secrets.
+- Fail safely on unreadable or empty configured secrets without exposing or silently downgrading credentials.
+- Recover explicit numeric laboratory history from longitudinal Patient Record pages.
+
 ## 0.5.0
 
 - Add source-preserving import of Patients Know Best FHIR R4 Bundles.
