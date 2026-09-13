@@ -10,6 +10,7 @@ from .parser import (
     RecordEvent,
     link_test_result_detail,
     parse_patient_record,
+    parse_patient_record_observations,
     parse_supported_view,
     parse_test_result_detail,
     parse_test_results_index,
@@ -17,7 +18,7 @@ from .parser import (
 )
 from .store import RecordStore
 
-PARSER_VERSION = "0.6.0"
+PARSER_VERSION = "0.6.1"
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,8 @@ def ingest_supported_views(
         raw = page.read_bytes()
         digest = store.retain_capture(raw, page.resolve().as_uri(), "text/html; capture=rendered-dom")
         source_kind, parsed = parse_supported_view(page)
+        if source_kind == "patient_record":
+            parsed.extend(parse_patient_record_observations(page))
         if any(event.source_sha256 != digest for event in parsed):
             raise RuntimeError(f"parser checksum mismatch for {page}")
         for event in parsed:

@@ -289,6 +289,42 @@ def pathology_events(path: Path, index_event: RecordEvent, detail: TestResultDet
     return events
 
 
+def parse_patient_record_observations(path: Path) -> list[RecordEvent]:
+    """Recover explicit numeric laboratory lines embedded in the longitudinal record."""
+    raw, digest = _source(path)
+    soup = BeautifulSoup(raw, "html.parser")
+    context: tuple[str, str, str] | None = None
+    events: list[RecordEvent] = []
+    entry_types = {"coded entry", "test result"}
+    for row in soup.select("main table tr"):
+        cells = row.select(":scope > td")
+        plain = [_clean(cell.get_text(" ", strip=True)) for cell in cells]
+        if len(plain) >= 3 and (parsed := _date(plain[0])):
+            context = (parsed, plain[1], plain[2])
+            continue
+        if not context or len(cells) < 2 or plain[0].casefold() not in entry_types:
+            continue
+        for line in (_clean(value) for value in cells[1].get_text("\n", strip=True).splitlines()):
+            match = LAB_RESULT.match(line)
+            if not match or match.group("name").rstrip().endswith(":"):
+                continue
+            unit = match.group("unit") or ""
+            if not unit and "ratio" not in match.group("name").casefold():
+                continue
+            fields = [
+                f"Test: {match.group('name').strip()}",
+                f"Value: {match.group('comparator')}{float(match.group('value')):g}",
+                f"Unit: {unit}" if unit else "Unit: not supplied",
+                "Source section: Patient Record",
+            ]
+            if match.group("low") and match.group("high"):
+                fields.extend([f"Reference low: {float(match.group('low')):g}", f"Reference high: {float(match.group('high')):g}"])
+            if match.group("narrative"):
+                fields.append(f"Source interpretation: {match.group('narrative').strip()}")
+            events.append(RecordEvent(*context, "Laboratory observation", "; ".join(fields), path.name, digest))
+    return events
+
+
 def link_test_result_detail(
     index_event: RecordEvent, detail: TestResultDetail
 ) -> tuple[RecordEvent, float, list[str]]:

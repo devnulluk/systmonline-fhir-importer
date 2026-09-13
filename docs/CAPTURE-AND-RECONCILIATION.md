@@ -39,4 +39,8 @@ A test-results index proves only that a result is listed. It is represented as a
 
 Detailed test-result pages may also contain a rendered `Pathology Investigations` block below the summary table. Parser v0.6 extracts only rows with an explicit numeric value, optional comparator, unit and bracketed reference interval. Narrative targets and comments remain source interpretation text and are never converted into laboratory reference intervals. The complete rendered page remains the authoritative retained evidence.
 
+SystmOnline's dedicated Test Results search may expose only a limited recent window (observed as 60 days). Parser v0.6.1 therefore also recovers explicit numeric laboratory lines embedded in the longitudinal Patient Record. It requires a recognisable numeric value and unit (except for named ratios), rejects administrative label-like lines, and preserves the Patient Record page as its evidence source. When the same reading is also available from a detailed report, downstream presentation should prefer the richer detailed-report copy and suppress the duplicate display point.
+
+This fallback cannot recover dates outside the captured Patient Record range. A historical capture must set the earliest available start date; apparent absence before that boundary means “not present in retained evidence”, not “the test never happened”. Qualitative, failed, requested, or narrative-only test entries remain reviewable source events rather than invented numeric observations.
+
 Unknown dates are represented explicitly and enter the event review queue. Missing authors or organisations in a summary view are labelled `Not supplied by source view`; they are never inferred from another page.

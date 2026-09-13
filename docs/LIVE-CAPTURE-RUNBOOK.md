@@ -20,6 +20,8 @@ This runbook is for a person capturing their own authorised record. It deliberat
 
 ## Test-result details
 
+The Test Results search may restrict the available date range (observed as 60 days). Use it for the richest recent report details, but do not treat it as a complete historical source. Capture the Patient Record from the earliest available start date as the longitudinal fallback for older explicit laboratory values.
+
 The saved index currently uses one separate `POST ViewDetailedTestResult` form per listed result. Each form carries an opaque result identifier. These identifiers are sensitive session-linked source data and must not be logged or committed.
 
 For every listed result:
