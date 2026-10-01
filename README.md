@@ -59,7 +59,7 @@ Run one refresh locally:
 systmonline-fhir-sync
 ```
 
-Or deploy [compose.mobius.yml](compose.mobius.yml) in Portainer. The container has no published port, writes only below `/data`, runs without root privileges and refreshes every 24 hours by default. The first successful run performs the complete backfill; later runs refresh a 120-day overlap so late amendments are retained without repeating hundreds of historical searches. Set `CLINICAL_IMPORT_URL` and `CLINICAL_IMPORT_TOKEN` to upload the reconciled database to the private portal after a successful capture. See the [live-capture runbook](docs/LIVE-CAPTURE-RUNBOOK.md).
+Or deploy [compose.mobius.yml](compose.mobius.yml) in Portainer. The container has no published port, has a read-only image filesystem, writes only below `/data` and refreshes every 24 hours by default. On Mobius it runs as root solely because Portainer creates a new bind-mounted host directory as root; `no-new-privileges` remains enabled. The first successful run performs the complete backfill; later runs refresh a 120-day overlap so late amendments are retained without repeating hundreds of historical searches. Set `CLINICAL_IMPORT_URL` and `CLINICAL_IMPORT_TOKEN` to upload the reconciled database to the private portal after a successful capture. See the [live-capture runbook](docs/LIVE-CAPTURE-RUNBOOK.md).
 
 Saved pages can be ingested into the evidence database and exported together:
 

@@ -3,6 +3,9 @@ services:
     build: .
     image: ghcr.io/devnulluk/systmonline-fhir-importer:latest
     container_name: systmonline-fhir-importer
+    # Portainer creates a new bind-mounted host directory as root. The service
+    # needs write access only to /data; the image filesystem remains read-only.
+    user: "0:0"
     restart: unless-stopped
     environment:
       SYSTMONLINE_USERNAME: ${SYSTMONLINE_USERNAME:-}
