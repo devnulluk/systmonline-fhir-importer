@@ -1,5 +1,6 @@
 services:
   systmonline-fhir-importer:
+    build: .
     image: ghcr.io/devnulluk/systmonline-fhir-importer:latest
     container_name: systmonline-fhir-importer
     restart: unless-stopped
