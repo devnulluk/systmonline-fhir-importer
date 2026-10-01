@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   python:
     runs-on: ubuntu-latest
@@ -40,3 +44,20 @@ jobs:
         run: curl --fail --location --silent --show-error --output /tmp/validator_cli.jar https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
       - name: Validate FHIR R4 against UK Core STU2
         run: java -jar /tmp/validator_cli.jar /tmp/bundle.json -version 4.0.1 -ig fhir.r4.ukcore.stu2#2.0.1 -tx n/a
+
+  container:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [python]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/devnulluk/systmonline-fhir-importer:latest

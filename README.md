@@ -49,7 +49,17 @@ SYSTMONLINE_PASSWORD=your-password
 
 Do not set real values in Compose files, Git, shell command arguments or Obsidian. A configured `*_FILE` that is missing or empty causes startup to fail; it never silently falls back to the less secure environment value. Credential objects redact both fields from their representation, and errors name only the missing setting.
 
-The capture engine now follows paginated records with a configurable pause and page limit. Every HTTP response is saved and checksummed before it is inspected, including an unexpected login page. It stops safely on session expiry, HTTP errors, pagination loops or the page limit, and writes a resumable partial manifest when interrupted. Live authenticated capture is intentionally not yet enabled: that will be tested interactively without storing credentials in this repository.
+Version 0.7.0 adds authenticated read-only capture for an authorised personal account. It deliberately supports SystmOnline's JavaScript/POST pagination rather than assuming ordinary links. The Patient Record is requested from `SYSTMONLINE_HISTORY_START` (default `01/01/1900`) through today with unknown-date entries included. Test Results are searched newest-first in complete, non-overlapping 60-day windows and every listed detail is retained in index order.
+
+Every response is saved and checksummed before parsing. Manifests contain filenames, checksums, sizes, timestamps and date windows, but never credentials, cookies, session UUIDs or opaque result identifiers. Re-running is safe: raw captures and derived records are content-addressed/idempotent and older snapshots are not deleted.
+
+Run one refresh locally:
+
+```text
+systmonline-fhir-sync
+```
+
+Or deploy [compose.mobius.yml](compose.mobius.yml) in Portainer. The container has no published port, writes only below `/data`, runs without root privileges and refreshes every 24 hours by default. The first successful run performs the complete backfill; later runs refresh a 120-day overlap so late amendments are retained without repeating hundreds of historical searches. Set `CLINICAL_IMPORT_URL` and `CLINICAL_IMPORT_TOKEN` to upload the reconciled database to the private portal after a successful capture. See the [live-capture runbook](docs/LIVE-CAPTURE-RUNBOOK.md).
 
 Saved pages can be ingested into the evidence database and exported together:
 

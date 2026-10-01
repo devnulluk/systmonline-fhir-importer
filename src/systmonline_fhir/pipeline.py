@@ -18,7 +18,7 @@ from .parser import (
 )
 from .store import RecordStore
 
-PARSER_VERSION = "0.6.1"
+PARSER_VERSION = "0.7.0"
 
 
 @dataclass(frozen=True)

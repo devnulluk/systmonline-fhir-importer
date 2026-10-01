@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+
+- Add an authenticated, read-only SystmOnline capture session for unattended refreshes.
+- Backfill the full Patient Record using SystmOnline's POST-based pagination.
+- Search Test Results in complete, non-overlapping 60-day windows and retain every detail page.
+- Keep captures and imports idempotent, checkpoint status to disk and optionally upload the evidence database to the private portal.
+- Add a hardened Mobius container definition and publish the tested image to GHCR.
+
 ## 0.6.1
 
 - Load unattended SystmOnline credentials from environment variables or preferred file-backed secrets.

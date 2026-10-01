@@ -1,9 +1,9 @@
 [project]
 name = "systmonline-fhir-importer"
-version = "0.6.1"
+version = "0.7.0"
 description = "Preserve SystmOnline and Patients Know Best records as reviewable FHIR evidence."
 requires-python = ">=3.12"
-dependencies = ["beautifulsoup4>=4.12,<5"]
+dependencies = ["beautifulsoup4>=4.12,<5", "requests>=2.32,<3"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<9", "ruff>=0.12,<1"]
@@ -14,6 +14,7 @@ systmonline-fhir-export = "systmonline_fhir.export:main"
 systmonline-fhir-terminology-audit = "systmonline_fhir.terminology_audit:main"
 systmonline-fhir-verify = "systmonline_fhir.verify:main"
 pkb-fhir-import = "systmonline_fhir.pkb:main"
+systmonline-fhir-sync = "systmonline_fhir.sync:main"
 
 [build-system]
 requires = ["hatchling"]

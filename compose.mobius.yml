@@ -1,0 +1,24 @@
+services:
+  systmonline-fhir-importer:
+    image: ghcr.io/devnulluk/systmonline-fhir-importer:latest
+    container_name: systmonline-fhir-importer
+    restart: unless-stopped
+    environment:
+      SYSTMONLINE_USERNAME: ${SYSTMONLINE_USERNAME:-}
+      SYSTMONLINE_PASSWORD: ${SYSTMONLINE_PASSWORD:-}
+      SYSTMONLINE_USERNAME_FILE: ${SYSTMONLINE_USERNAME_FILE:-}
+      SYSTMONLINE_PASSWORD_FILE: ${SYSTMONLINE_PASSWORD_FILE:-}
+      SYSTMONLINE_HISTORY_START: ${SYSTMONLINE_HISTORY_START:-01/01/1900}
+      SYSTMONLINE_SYNC_INTERVAL_HOURS: ${SYSTMONLINE_SYNC_INTERVAL_HOURS:-24}
+      SYSTMONLINE_REFRESH_LOOKBACK_DAYS: ${SYSTMONLINE_REFRESH_LOOKBACK_DAYS:-120}
+      SYSTMONLINE_DELAY_SECONDS: ${SYSTMONLINE_DELAY_SECONDS:-1}
+      CLINICAL_IMPORT_URL: ${CLINICAL_IMPORT_URL:-http://10.30.30.2:31020/api/admin/import}
+      CLINICAL_IMPORT_TOKEN: ${CLINICAL_IMPORT_TOKEN:-}
+      CLINICAL_IMPORT_TOKEN_FILE: ${CLINICAL_IMPORT_TOKEN_FILE:-}
+    volumes:
+      - /mnt/Mobius/docker/systmonline-fhir-importer:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    security_opt:
+      - no-new-privileges:true
